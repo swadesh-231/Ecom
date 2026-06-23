@@ -1,21 +1,28 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
-const userSchema = new mongoose.Schema(
+// Authentication is handled entirely by Clerk. We mirror the Clerk user here so
+// we can attach app-specific data (role, orders, reviews) and query by it.
+// No passwords or tokens are stored locally.
+const userSchema = new Schema(
   {
-    username: {
+    clerkId: {
       type: String,
       required: true,
+      unique: true,
+      index: true,
     },
     email: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
       trim: true,
     },
-    password: {
+    name: {
       type: String,
-      required: true,
+      trim: true,
+    },
+    avatar: {
+      type: String,
     },
     role: {
       type: String,
@@ -27,28 +34,5 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
-userSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
-  this.password = await bcrypt.hash(this.password, 10);
-});
 
-userSchema.methods.isPasswordCorrect = async function (password) {
-  return await bcrypt.compare(password, this.password);
-};
-
-
-userSchema.methods.generateAccessToken = function () {
-  return jwt.sign(
-    {
-      _id: this._id,
-      email: this.email,
-      username: this.username,
-    },
-    process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
-  );
-};
-
-
-
-const User = mongoose.model("User", userSchema);
+export const User = mongoose.model("User", userSchema);
