@@ -1,9 +1,11 @@
 import axios from "axios";
 
 // Single axios instance for the whole app. Base URL comes from the env var and
-// every request is prefixed with the API version.
+// every request is prefixed with the API version. When VITE_BACKEND_URL is
+// empty/unset (e.g. the production single-service deploy where the API and the
+// frontend share an origin), this resolves to a relative "/api/v1".
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_BACKEND_URL}/api/v1`,
+  baseURL: `${import.meta.env.VITE_BACKEND_URL ?? ""}/api/v1`,
   withCredentials: true,
 });
 

@@ -1,0 +1,43 @@
+# Render Blueprint — single Web Service that builds the frontend and serves it
+# from the Express backend. Commit this file and click "New + > Blueprint" in
+# Render (or it's auto-detected when you connect the repo).
+#
+# Secrets are marked `sync: false` so Render prompts you to enter them in the
+# dashboard instead of storing them in git.
+services:
+  - type: web
+    name: ecom
+    runtime: node
+    plan: free
+    # Render injects its own PORT; the app already reads process.env.PORT.
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Set this to your live Render URL after the first deploy (used for CORS
+      # and Stripe redirects), e.g. https://ecom.onrender.com
+      - key: CORS_ORIGIN
+        sync: false
+      - key: MONGO_URI
+        sync: false
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      # Frontend build-time vars. Leave VITE_BACKEND_URL empty (same origin).
+      - key: VITE_CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: VITE_BACKEND_URL
+        value: ""

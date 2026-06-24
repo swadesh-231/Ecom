@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import path from "path";
+import { fileURLToPath } from "url";
 import { clerkMiddleware } from "@clerk/express";
 
 import { errorHandler, notFound } from "./middlewares/error.middleware.js";
@@ -11,6 +13,8 @@ import productRouter from "./routes/product.routes.js";
 import orderRouter from "./routes/order.routes.js";
 import reviewRouter from "./routes/review.routes.js";
 import checkoutRouter from "./routes/checkout.routes.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
@@ -53,6 +57,21 @@ app.use("/api/v1/products", productRouter);
 app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/reviews", reviewRouter);
 app.use("/api/v1/checkout", checkoutRouter);
+
+// In production this single server also serves the built React app
+// (Frontend/dist). Static assets are served directly; any other non-API GET
+// falls through to index.html so client-side (SPA) routing works on refresh /
+// deep links. API 404s still fall through to the JSON handler below.
+if (process.env.NODE_ENV === "production") {
+  const frontendDist = path.resolve(__dirname, "../../Frontend/dist");
+  app.use(express.static(frontendDist));
+  app.use((req, res, next) => {
+    if (req.method === "GET" && !req.path.startsWith("/api")) {
+      return res.sendFile(path.join(frontendDist, "index.html"));
+    }
+    next();
+  });
+}
 
 // 404 + centralized error handling (must be last)
 app.use(notFound);

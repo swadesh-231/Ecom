@@ -1,0 +1,19 @@
+{
+  "name": "ecom",
+  "version": "1.0.0",
+  "description": "MERN e-commerce app — single-service deploy: the backend serves the built frontend, so one server + one .env runs everything.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "install-all": "npm install && npm install --prefix Backend && npm install --prefix Frontend",
+    "build": "npm install --prefix Backend && npm install --prefix Frontend --include=dev && npm run build --prefix Frontend",
+    "start": "npm start --prefix Backend",
+    "dev": "concurrently -n backend,frontend -c blue,magenta \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm run dev --prefix Backend",
+    "dev:frontend": "npm run dev --prefix Frontend",
+    "seed": "npm run seed --prefix Backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
