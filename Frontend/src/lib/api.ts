@@ -1,11 +1,29 @@
 import axios from "axios";
 
-// Single axios instance for the whole app. Base URL comes from the env var and
-// every request is prefixed with the API version. When VITE_BACKEND_URL is
-// empty/unset (e.g. the production single-service deploy where the API and the
-// frontend share an origin), this resolves to a relative "/api/v1".
+// Resolve the API base URL. In the single-service production deploy the frontend
+// and API share an origin, so a relative "/api/v1" is correct. VITE_BACKEND_URL
+// is only used when it points somewhere actually reachable from the current
+// page: a stale "http://localhost:8000" baked into a production build (served
+// over https on a real domain) is ignored so we fall back to the same origin.
+// This keeps local dev working (page on :5173 → API on :8000) without letting a
+// misconfigured build-time env var silently break production.
+const resolveBaseUrl = () => {
+  const configured = import.meta.env.VITE_BACKEND_URL?.trim();
+  if (configured) {
+    const isLocalhostBackend = /\/\/(localhost|127\.0\.0\.1)/.test(configured);
+    const pageOnLocalhost =
+      typeof window !== "undefined" &&
+      /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
+    if (!isLocalhostBackend || pageOnLocalhost) {
+      return `${configured.replace(/\/$/, "")}/api/v1`;
+    }
+  }
+  return "/api/v1";
+};
+
+// Single axios instance for the whole app.
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_BACKEND_URL ?? ""}/api/v1`,
+  baseURL: resolveBaseUrl(),
   withCredentials: true,
 });
 
