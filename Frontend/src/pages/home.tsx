@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductCard } from "@/components/product/product-card";
 import { getProducts, getCategories } from "@/lib/services";
+import { getErrorMessage } from "@/lib/api";
 import type { Product } from "@/lib/types";
 
 const HERO_IMG =
@@ -14,8 +15,10 @@ export function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setError(null);
     Promise.all([
       getProducts({ sort: "newest", limit: 24 }),
       getCategories(),
@@ -24,7 +27,10 @@ export function HomePage() {
         setProducts(res.products);
         setCategories(cats);
       })
-      .catch(() => {})
+      .catch((err) => {
+        console.error("Failed to load products", err);
+        setError(getErrorMessage(err));
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -185,6 +191,14 @@ export function HomePage() {
                 <Skeleton className="h-4 w-2/3" />
               </div>
             ))}
+          </div>
+        ) : error ? (
+          <div className="border-destructive/30 bg-destructive/5 text-muted-foreground rounded-xl border p-8 text-center text-sm">
+            Couldn't load products: {error}
+          </div>
+        ) : newArrivals.length === 0 ? (
+          <div className="text-muted-foreground rounded-xl border p-8 text-center text-sm">
+            No products yet.
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4">
